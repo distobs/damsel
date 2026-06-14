@@ -1,52 +1,13 @@
-import { MongoClient, ServerApiVersion } from "mongodb";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import express from "express";
 import cors from "cors";
 import jwt from "jsonwebtoken";
+import { setup_db } from "./dbconn";
 
 dotenv.config();
 
-// db conn
-
-const uri = process.env.DB_URI;
-
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
-
-async function run() {
-  try {
-    await client.connect();
-
-    await client.db("admin").command({
-      ping: 1,
-    });
-
-    console.log("DB Ping OK");
-  } catch (e) {
-    console.log("DB not OK:", e);
-
-    await client.close();
-
-    process.exit(1);
-  }
-}
-
-await run();
-
-const db = client.db("damsel");
-
-const usersCol = db.collection("users");
-
-await usersCol.createIndex(
-  { login: 1 },
-  { unique: true }
-);
+const { usersCol } = setup_db();
 
 // express
 
@@ -59,6 +20,26 @@ const saltrounds = 12;
 app.use(express.json());
 
 app.use(cors());
+
+app.get("/user", async (req, res) => {
+  const login = req.params.login;
+
+  if (!login) {
+    return res.status(400).send({
+      message: "Request inválido",
+    });
+  }
+
+  const user = await usersCol.findOne({ login });
+
+  if (!user) {
+    return res.status(404).send({
+      message: "Usuário não encontrado.",
+    });
+  }
+
+  return res.status(200).send(user);
+});
 
 app.post("/signup", async (req, res) => {
   const { login, password } = req.body;

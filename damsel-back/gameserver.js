@@ -1,8 +1,10 @@
 import { WebSocketServer } from "ws";
 import jwt from "jsonwebtoken";
+import { makeBoard } from "./game";
 
 const port = 3000;
 
+const playerGames = new Map();
 const games = new Map();
 const challenges = new Map();
 const clients = new Map();
@@ -15,7 +17,14 @@ wss.on("connection", (ws) => {
   ws.on("error", console.error);
 
   ws.on("message", (data) => {
-    const msg = JSON.parse(data);
+    let msg;
+
+    try {
+      msg = JSON.parse(data);
+    } catch {
+      ws.close();
+      return;
+    }
 
     if (!ws.authenticated) {
       if (msg.type !== "AUTH") {
@@ -106,9 +115,12 @@ wss.on("connection", (ws) => {
             white,
             black,
             turn: white,
-            board: []
+            board: makeBoard(),
           }
         )
+
+        playerGames.set(white, gameId);
+        playerGames.set(black, gameId);
 
         challenges.delete(ws.userId);
 
@@ -124,7 +136,13 @@ wss.on("connection", (ws) => {
 
         break;
       case "MOVE":
-        handleMove(ws.userId, msg);
+        handleMove(
+          games,
+          playerGames.get(ws.userId),
+          clients,
+          ws.userId,
+          msg
+        );
 
         break;
     }
@@ -132,5 +150,6 @@ wss.on("connection", (ws) => {
 
   ws.on("close", () => {
     clients.delete(ws.userId);
+    challenges.delete(ws.userId);
   });
 });
