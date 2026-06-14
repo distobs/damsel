@@ -1,0 +1,11 @@
+body {
+  background-color: #301934;
+  color: #FADEDE;
+  margin: 0;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+#board {
+  width: 60vmin;
+  height: 60vmin;
+}
