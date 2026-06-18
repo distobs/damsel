@@ -24,7 +24,10 @@ export function signupAuth(form: HTMLFormElement) {
     });
 
     if (response.status != 200) {
-      alert("Erro ao criar usuário");
+      const res = await response.json();
+      const sres = JSON.stringify(res);
+
+      alert(`Erro ao criar usuário: ${sres}`);
       return;
     } else {
       render();

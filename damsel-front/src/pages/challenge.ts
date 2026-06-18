@@ -1,4 +1,7 @@
-export function challengePage(menuDiv: HTMLDivElement) {
+import { challengeFormHandle } from "../game/challenge_form";
+import type { GlobalState } from "../types/states";
+
+export function challengePage(menuDiv: HTMLDivElement, siteState: GlobalState) {
   return (event: MouseEvent) => {
     event.preventDefault();
 
@@ -12,8 +15,8 @@ export function challengePage(menuDiv: HTMLDivElement) {
       </div>
     </form>`;
 
-    const challengeForm = document.querySelector<HTMLFormElement>("#challengeForm")!;
+    const form = document.querySelector<HTMLFormElement>("#challengeForm")!;
 
-    challengeForm.addEventListener("submit", (event) => { event.preventDefault(); console.log("desafio foda"); });
+    form.addEventListener("submit", challengeFormHandle(siteState, form))
   };
 }

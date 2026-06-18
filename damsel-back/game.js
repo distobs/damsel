@@ -85,6 +85,8 @@ export function handleMove(games, gameId, clients, playerId, msg) {
     return;
   }
 
+  console.log("Movimento ainda não implementado.");
+  /*
   applyMove(game.board, msg.move);
 
   const opponent = (game.white === userId) ? game.black : game.white;
@@ -99,4 +101,5 @@ export function handleMove(games, gameId, clients, playerId, msg) {
       }
     )
   )
+  */
 }

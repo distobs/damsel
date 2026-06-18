@@ -1,3 +1,4 @@
+import { sck_connect } from "../gameserver/socket";
 import { render } from "../main";
 import type { GlobalState } from "../types/states";
 
@@ -24,7 +25,9 @@ export function loginAuth(siteState: GlobalState, form: HTMLFormElement) {
     });
 
     if (response.status != 200) {
-      alert("Erro ao efetuar login.");
+      const res = await response.json();
+      const sres = JSON.stringify(res);
+      alert(`Erro ao efetuar login: ${sres}`);
       return;
     } else {
       const jres = await response.json()
@@ -33,6 +36,14 @@ export function loginAuth(siteState: GlobalState, form: HTMLFormElement) {
 
       siteState.loggedIn = true;
       siteState.jwt = token;
+      siteState.socket = sck_connect(siteState.jwt);
+
+      siteState.socket!.addEventListener("message", (ev) => {
+        if (ev.data === "CHAL") {
+          alert("tu vai aceitar sim baitola");
+          siteState.socket!.send("ACPT");
+        }
+      });
 
       render();
     }

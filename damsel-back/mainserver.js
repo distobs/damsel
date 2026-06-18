@@ -3,11 +3,10 @@ import bcrypt from "bcrypt";
 import express from "express";
 import cors from "cors";
 import jwt from "jsonwebtoken";
-import { setup_db } from "./dbconn";
+import { setup_db } from "./dbconn.js";
+import { setup_ws } from "./gameserver.js";
 
 dotenv.config();
-
-const { usersCol } = setup_db();
 
 // express
 
@@ -22,7 +21,7 @@ app.use(express.json());
 app.use(cors());
 
 app.get("/user", async (req, res) => {
-  const login = req.params.login;
+  const login = req.query.login;
 
   if (!login) {
     return res.status(400).send({
@@ -130,3 +129,9 @@ app.post("/login", async (req, res) => {
 app.listen(port, () => {
   console.log(`Open: ${port}`);
 });
+
+// websocket
+setup_ws();
+
+// dbconn
+const usersCol = await setup_db();

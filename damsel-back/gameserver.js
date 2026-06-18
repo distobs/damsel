@@ -1,155 +1,165 @@
 import { WebSocketServer } from "ws";
 import jwt from "jsonwebtoken";
-import { makeBoard } from "./game";
+import { makeBoard } from "./game.js";
 
-const port = 3000;
+const port = 3001;
 
 const playerGames = new Map();
 const games = new Map();
 const challenges = new Map();
 const clients = new Map();
 
-const wss = new WebSocketServer({ port });
+export function setup_ws() {
+  const wss = new WebSocketServer({ port });
 
-wss.on("connection", (ws) => {
-  ws.authenticated = false;
+  wss.on("listening", () => {
+    console.log(`WSS on ${port}`);
+  });
 
-  ws.on("error", console.error);
+  wss.on("connection", (ws) => {
+    ws.authenticated = false;
 
-  ws.on("message", (data) => {
-    let msg;
+    ws.on("error", console.error);
 
-    try {
-      msg = JSON.parse(data);
-    } catch {
-      ws.close();
-      return;
-    }
+    ws.on("message", (data) => {
+      let msg;
 
-    if (!ws.authenticated) {
-      if (msg.type !== "AUTH") {
+      try {
+        msg = JSON.parse(data);
+      } catch {
         ws.close();
         return;
-      } else {
-        try {
-          const payload = jwt.verify(msg.token, process.env.SECRET_KEY);
-
-          if (typeof payload !== "object") {
-            ws.close();
-            return;
-          }
-
-          if (!payload.sub) {
-            ws.close();
-            return;
-          }
-
-          ws.userId = payload.sub;
-
-          ws.authenticated = true;
-
-          clients.get(ws.userId)?.close();
-
-          clients.set(
-            ws.userId,
-            ws
-          );
-
-          ws.send(
-            JSON.stringify({
-              type: "AUTH_OK",
-            })
-          );
-        } catch (e) {
-          console.log("Error: ", e.message);
-          ws.close();
-        }
-
-        return;
       }
-    }
 
-    switch (msg.type) {
-      case "CHAL":
-        if (msg.user === ws.userId) {
+        console.log(msg);
+
+      if (!ws.authenticated) {
+        if (msg.type !== "AUTH") {
+          ws.close();
+          return;
+        } else {
+          try {
+            const payload = jwt.verify(msg.token, process.env.SECRET_KEY);
+
+            if (typeof payload !== "object") {
+              ws.close();
+              return;
+            }
+
+            if (!payload.sub) {
+              ws.close();
+              return;
+            }
+
+            ws.userId = payload.sub;
+
+            ws.authenticated = true;
+
+            clients.get(ws.userId)?.close();
+
+            clients.set(
+              ws.userId,
+              ws
+            );
+
+            ws.send(
+              JSON.stringify({
+                type: "AUTH_OK",
+              })
+            );
+          } catch (e) {
+            console.log("Error: ", e.message);
+            ws.close();
+          }
+
           return;
         }
+      }
 
-        const target = clients.get(msg.user);
+      switch (msg.type) {
+        case "CHAL":
+          if (msg.user === ws.userId) {
+            return;
+          }
 
-        if (!target) {
-          return;
-        }
+          const target = clients.get(msg.user);
 
-        challenges.set(
-          msg.user,
-          ws.userId
-        )
+          if (!target) {
+            return;
+          }
 
-        target.send(JSON.stringify({
-          type: "CHAL",
-          from: ws.userId,
-        }));
+          challenges.set(
+            msg.user,
+            ws.userId
+          )
 
-        break;
-      case "ACPT":
-        const challenger = challenges.get(ws.userId);
+          target.send(JSON.stringify({
+            type: "CHAL",
+            from: ws.userId,
+          }));
 
-        if (!challenger) {
-          return;
-        }
+          break;
+        case "ACPT":
+          const challenger = challenges.get(ws.userId);
 
-        if (!clients.has(challenger)) {
+          if (!challenger) {
+            return;
+          }
+
+          if (!clients.has(challenger)) {
+            challenges.delete(ws.userId);
+            return;
+          }
+
+          const gameId = crypto.randomUUID();
+
+          const white = (Math.random() < 0.5) ? ws.userId : challenger;
+          const black = (white == ws.userId) ? challenger : ws.userId;
+
+          games.set(
+            gameId,
+            {
+              white,
+              black,
+              turn: white,
+              board: makeBoard(),
+            }
+          )
+
+          playerGames.set(white, gameId);
+          playerGames.set(black, gameId);
+
           challenges.delete(ws.userId);
-          return;
-        }
 
-        const gameId = crypto.randomUUID();
-
-        const white = (Math.random() < 0.5) ? ws.userId : challenger;
-        const black = (white == ws.userId) ? challenger : ws.userId;
-
-        games.set(
-          gameId,
-          {
+          const start = JSON.stringify(({
+            type: "STRT",
+            gameId,
             white,
             black,
-            turn: white,
-            board: makeBoard(),
-          }
-        )
+          }));
 
-        playerGames.set(white, gameId);
-        playerGames.set(black, gameId);
+          clients.get(white)?.send(start);
+          clients.get(black)?.send(start);
 
-        challenges.delete(ws.userId);
+          break;
+        case "MOVE":
+          handleMove(
+            games,
+            playerGames.get(ws.userId),
+            clients,
+            ws.userId,
+            msg
+          );
 
-        const start = JSON.stringify(({
-          type: "STRT",
-          gameId,
-          white,
-          black,
-        }));
+          break;
+      }
+    });
 
-        clients.get(white)?.send(start);
-        clients.get(black)?.send(start);
+    ws.on("close", () => {
+      clients.delete(ws.userId);
+      challenges.delete(ws.userId);
 
-        break;
-      case "MOVE":
-        handleMove(
-          games,
-          playerGames.get(ws.userId),
-          clients,
-          ws.userId,
-          msg
-        );
-
-        break;
-    }
+      console.log("RESIGN IS NOT HANDLED YET");
+    });
   });
-
-  ws.on("close", () => {
-    clients.delete(ws.userId);
-    challenges.delete(ws.userId);
-  });
-});
+}

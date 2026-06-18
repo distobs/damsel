@@ -1,4 +1,7 @@
 import { MongoClient, ServerApiVersion } from "mongodb";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const uri = process.env.DB_URI;
 
@@ -40,6 +43,6 @@ export async function setup_db() {
     { unique: true }
   );
 
-  return { client, db, usersCol };
+  return usersCol;
 }
 

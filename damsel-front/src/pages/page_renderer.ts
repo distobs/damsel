@@ -20,7 +20,7 @@ export function pageRender(page: string, menuDiv: HTMLDivElement, siteState: Glo
 
     switch (page) {
       case "challenge":
-        return challengePage(menuDiv)(event);
+        return challengePage(menuDiv, siteState)(event);
       case "history":
         return historyPage(menuDiv)(event);
       case "login":
