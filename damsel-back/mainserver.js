@@ -22,14 +22,18 @@ app.use(cors());
 
 app.get("/user", async (req, res) => {
   const login = req.query.login;
+  const id = req.query.id;
+  let user = undefined;
 
-  if (!login) {
+  if (!login && !id) {
     return res.status(400).send({
       message: "Request inválido",
     });
+  } else if (login) {
+    user = await usersCol.findOne({ login });
+  } else {
+    user = await usersCol.findOne({ _id: id });
   }
-
-  const user = await usersCol.findOne({ login });
 
   if (!user) {
     return res.status(404).send({

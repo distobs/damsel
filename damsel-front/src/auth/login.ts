@@ -41,7 +41,7 @@ export function loginAuth(siteState: GlobalState, form: HTMLFormElement) {
       siteState.socket!.addEventListener("message", (ev) => {
         if (ev.data === "CHAL") {
           alert("tu vai aceitar sim baitola");
-          siteState.socket!.send("ACPT");
+            siteState.socket!.send("ACPT");
         }
       });
 

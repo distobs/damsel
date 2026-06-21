@@ -31,7 +31,7 @@ export function setup_ws() {
         return;
       }
 
-        console.log(msg);
+      console.log(msg);
 
       if (!ws.authenticated) {
         if (msg.type !== "AUTH") {
@@ -78,22 +78,32 @@ export function setup_ws() {
 
       switch (msg.type) {
         case "CHAL":
-          if (msg.user === ws.userId) {
+          const challengerId = ws.userId;
+          const targetId = msg.user;
+
+          // can't challenge yourself buddy
+          if (targetId === challengerId) {
             return;
           }
 
-          const target = clients.get(msg.user);
+          const targetClient = clients.get(targetId);
 
-          if (!target) {
+          if (!targetClient) {
             return;
           }
 
+          // that player's already been challenged
+          if (challenges.get(targetId)) {
+            return;
+          }
+
+          // map target => challenger
           challenges.set(
-            msg.user,
-            ws.userId
+            targetId,
+            challengerId
           )
 
-          target.send(JSON.stringify({
+          targetClient.send(JSON.stringify({
             type: "CHAL",
             from: ws.userId,
           }));
