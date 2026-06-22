@@ -1,3 +1,4 @@
+import { jwtDecode } from "jwt-decode";
 import { sck_connect } from "../gameserver/socket";
 import { render } from "../main";
 import type { GlobalState } from "../types/states";
@@ -34,16 +35,12 @@ export function loginAuth(siteState: GlobalState, form: HTMLFormElement) {
 
       const token = jres.message;
 
+      const decToken = jwtDecode(token);
+
+      siteState.myId = decToken.sub!;
       siteState.loggedIn = true;
       siteState.jwt = token;
-      siteState.socket = sck_connect(siteState.jwt);
-
-      siteState.socket!.addEventListener("message", (ev) => {
-        if (ev.data === "CHAL") {
-          alert("tu vai aceitar sim baitola");
-            siteState.socket!.send("ACPT");
-        }
-      });
+      siteState.socket = sck_connect(siteState);
 
       render();
     }

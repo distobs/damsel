@@ -110,14 +110,16 @@ export function setup_ws() {
 
           break;
         case "ACPT":
-          const challenger = challenges.get(ws.userId);
+          // target sends ACPT
+          const target = ws.userId;
+          const challenger = challenges.get(target);
 
           if (!challenger) {
             return;
           }
 
           if (!clients.has(challenger)) {
-            challenges.delete(ws.userId);
+            challenges.delete(target);
             return;
           }
 

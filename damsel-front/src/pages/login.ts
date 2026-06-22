@@ -1,7 +1,9 @@
 import { loginAuth } from "../auth/login";
 import type { GlobalState } from "../types/states";
 
-export function loginPage(menuDiv: HTMLDivElement, siteState: GlobalState) {
+export function loginPage(siteState: GlobalState) {
+  const menuDiv = siteState.menuDiv!;
+
   return (event: MouseEvent) => {
     event.preventDefault();
     menuDiv.innerHTML = `<form class="d-flex flex-column gap-3" id="loginForm">

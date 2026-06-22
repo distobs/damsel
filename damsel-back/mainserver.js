@@ -5,6 +5,7 @@ import cors from "cors";
 import jwt from "jsonwebtoken";
 import { setup_db } from "./dbconn.js";
 import { setup_ws } from "./gameserver.js";
+import { ObjectId } from "mongodb";
 
 dotenv.config();
 
@@ -32,7 +33,7 @@ app.get("/user", async (req, res) => {
   } else if (login) {
     user = await usersCol.findOne({ login });
   } else {
-    user = await usersCol.findOne({ _id: id });
+    user = await usersCol.findOne({ _id: new ObjectId(id) });
   }
 
   if (!user) {

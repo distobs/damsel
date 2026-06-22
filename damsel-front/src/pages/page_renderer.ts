@@ -5,7 +5,7 @@ import { historyPage } from "./history";
 import { loginPage } from "./login";
 import { signupPage } from "./signup";
 
-export function pageRender(page: string, menuDiv: HTMLDivElement, siteState: GlobalState) {
+export function pageRender(page: string, siteState: GlobalState) {
   return (event: PointerEvent) => {
     const titleDiv = document.querySelector("#titlediv")!;
 
@@ -20,13 +20,13 @@ export function pageRender(page: string, menuDiv: HTMLDivElement, siteState: Glo
 
     switch (page) {
       case "challenge":
-        return challengePage(menuDiv, siteState)(event);
+        return challengePage(siteState)(event);
       case "history":
-        return historyPage(menuDiv)(event);
+        return historyPage(siteState)(event);
       case "login":
-        return loginPage(menuDiv, siteState)(event);
+        return loginPage(siteState)(event);
       case "signup":
-        return signupPage(menuDiv)(event);
+        return signupPage(siteState)(event);
     }
   }
 }

@@ -1,6 +1,9 @@
 import { signupAuth } from "../auth/signup";
+import type { GlobalState } from "../types/states";
 
-export function signupPage(menuDiv: HTMLDivElement) {
+export function signupPage(siteState: GlobalState) {
+  const menuDiv = siteState.menuDiv!;
+
   return (event: MouseEvent) => {
     event.preventDefault();
     menuDiv.innerHTML = `<form class="d-flex flex-column gap-3" id="signupForm">

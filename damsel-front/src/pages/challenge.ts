@@ -1,7 +1,9 @@
-import { challengeFormHandle } from "../game/challenge_form";
+import { challengeFormHandle } from "../gameserver/challenge_form";
 import type { GlobalState } from "../types/states";
 
-export function challengePage(menuDiv: HTMLDivElement, siteState: GlobalState) {
+export function challengePage(siteState: GlobalState) {
+  const menuDiv = siteState.menuDiv!;
+
   return (event: MouseEvent) => {
     event.preventDefault();
 
