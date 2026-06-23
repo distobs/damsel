@@ -102,7 +102,7 @@ export function handleMove(game, white, clients, sel, tar) {
   let gameover = true;
 
   const opponentPieces = (white) ? pieces.BLACK : pieces.WHITE;
-  
+
   for (let i = 0; i < 8; ++i) {
     for (let j = 0; j < 8; ++j) {
       if (game.board[i][j] == opponentPieces) {

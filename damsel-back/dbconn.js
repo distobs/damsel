@@ -25,6 +25,7 @@ async function run() {
   } catch (e) {
     console.log("DB not OK:", e);
 
+    console.log(uri);
     await client.close();
 
     process.exit(1);

@@ -30,7 +30,7 @@ function drawPiece(ctx: CanvasRenderingContext2D, center: {x: number, y: number}
       ctx.fillStyle = "white";
       break;
     case pieces.BLACK:
-      ctx.fillStyle = "black";
+      ctx.fillStyle = "green";
       break;
     default:
       break;

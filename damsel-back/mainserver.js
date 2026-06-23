@@ -63,6 +63,7 @@ app.post("/signup", async (req, res) => {
     await usersCol.insertOne({
       login,
       password: hash,
+      history: [],
     });
 
     return res.status(200).send({

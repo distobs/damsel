@@ -32,7 +32,9 @@ export function sck_msg_monitor(siteState: GlobalState) {
         const jres = await res.json();
         const login = jres.login;
 
+        window.focus();
         const conf = confirm(`Você aceita o desafio de ${login}?`);
+        window.focus();
 
         if (conf) {
           console.log("Desafio aceito!");

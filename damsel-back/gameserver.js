@@ -184,8 +184,19 @@ export async function setup_ws(usersCol) {
               winner: ws.userId,
             });
 
-            const whiteDb = await usersCol.findOne({ _id: ObjectId(game.white) });
-            const blackDb = await usersCol.findOne({ _id: ObjectId(game.black) });
+            usersCol.updateOne({ _id: ObjectId(game.white) },
+            {
+              $push: {
+                history: { opponent: game.black, moves: game.history }
+              }
+            });
+
+            usersCol.updateOne({ _id: ObjectId(game.black) },
+            {
+              $push: {
+                history: { opponent: game.white, moves: game.history }
+              }
+            });
 
             clients.get(game.white)?.send(GMOV);
             clients.get(game.black)?.send(GMOV);
