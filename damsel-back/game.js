@@ -32,74 +32,86 @@ export function makeBoard() {
   return board;
 }
 
-// Move handling
+export function handleMove(game, white, clients, sel, tar) {
+  // pra mó de não demorar, nois assume que essa proposição é verdade:
+  // ∀Mx ∈ M, V(Mx)
+  // onde M é o conjunto dos movimentos, e V é verdadeiro se seu argumento for um movimento validado
+  // ou seja: ninguem vai verificar movimento nenhum
 
-function applyMove(playerPieces, board, move) {
-  const origin = move[0];
-  const destination = move[1];
+  const myPieces = (white) ? pieces.WHITE : pieces.BLACK;
 
-  if (
-    origin.some(v => v < 0 || v > 7) ||
-    destination.some(v => v < 0 || v > 7)
-  ) {
-    return false;
+  const possibleTargetsSemCume = [
+    {tx: sel.sx + 1, ty: sel.sy + 1}, // sem cume
+    {tx: sel.sx - 1, ty: sel.sy + 1},
+    {tx: sel.sx + 1, ty: sel.sy - 1},
+    {tx: sel.sx - 1, ty: sel.sy - 1},
+  ];
+
+  const possibleTargetsCumeno = [
+    {tx: sel.sx + 2, ty: sel.sy + 2}, // cumeno
+    {tx: sel.sx - 2, ty: sel.sy + 2},
+    {tx: sel.sx + 2, ty: sel.sy - 2},
+    {tx: sel.sx - 2, ty: sel.sy - 2},
+  ];
+
+  let idxTC = -1, idxTS = -1;
+
+  possibleTargetsSemCume.some((v, idx) => {
+    if (v.tx == tar.tx && v.ty == tar.ty) {
+      idxTS = idx;
+      return true;
+    } else {
+      return false;
+    }
+  });
+
+  possibleTargetsCumeno.some((v, idx) => {
+    if (v.tx == tar.tx && v.ty == tar.ty) {
+      idxTC = idx;
+      return true;
+    } else {
+      return false;
+    }
+  });
+
+  game.board[sel.sy][sel.sx] = pieces.NONE;
+
+  if (idxTS >= 0) {
+    game.board[tar.ty][tar.tx] = myPieces;
+  } else {
+    switch (idxTC) {
+      case 0:
+        game.board[tar.ty - 1][tar.tx - 1] = pieces.NONE;
+        game.board[tar.ty][tar.tx] = myPieces;
+        break;
+      case 1:        
+        game.board[tar.ty - 1][tar.tx + 1] = pieces.NONE;
+        game.board[tar.ty][tar.tx] = myPieces;
+        break;
+      case 2:
+        game.board[tar.ty + 1][tar.tx - 1] = pieces.NONE;
+        game.board[tar.ty][tar.tx] = myPieces;
+        break;
+      case 3:        
+        game.board[tar.ty + 1][tar.tx + 1] = pieces.NONE;
+        game.board[tar.ty][tar.tx] = myPieces;
+        break;
+    }
   }
+  
+  let gameover = true;
 
-  const originX = origin[0];
-  const originY = origin[1];
-  const destX = destination[0];
-  const destY = destination[1];
-
-  if ((originX + originY) % 2 !== 1) {
-    return;
-  } else if ((destX + destY) % 2 !== 1) {
-    return;
-  }
-
-  const originPiece = board[originX][originY];
-
-  // player not moving a piece or queen of their color
-  if (originPiece !== playerPieces && originPiece !== playerPieces + 2) {
-    return false;
-  }
-
-  const destPiece = board[destX][destY];
-
-  // we can't move to where pieces are, only past them
-  if (destPiece !== pieces.NONE) {
-    return false;
-  }
-
-  if (originPiece == playerPieces) {
-  }
-}
-
-export function handleMove(games, gameId, clients, playerId, msg) {
-  if (!gameId) {
-    return
-  }
-
-  const game = games.get(gameId);
-
-  if (game.turn !== playerId) {
-    return;
-  }
-
-  console.log("Movimento ainda não implementado.");
-  /*
-  applyMove(game.board, msg.move);
-
-  const opponent = (game.white === userId) ? game.black : game.white;
-
-  game.turn = opponent;
-
-  clients.get(opponent)?.send(
-    JSON.stringify(
-      {
-        type: "MOVE",
-        move: msg.move,
+  const opponentPieces = (white) ? pieces.BLACK : pieces.WHITE;
+  
+  for (let i = 0; i < 8; ++i) {
+    for (let j = 0; j < 8; ++j) {
+      if (game.board[i][j] == opponentPieces) {
+        gameover = false;
       }
-    )
-  )
-  */
+    }
+  }
+
+  game.turn = (white) ? game.black : game.white;
+
+  return gameover;
 }

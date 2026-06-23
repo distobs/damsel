@@ -1,6 +1,8 @@
 import { WebSocketServer } from "ws";
 import jwt from "jsonwebtoken";
+import { handleMove } from "./game.js";
 import { makeBoard } from "./game.js";
+import { ObjectId } from "mongodb";
 
 const port = 3001;
 
@@ -9,7 +11,7 @@ const games = new Map();
 const challenges = new Map();
 const clients = new Map();
 
-export function setup_ws() {
+export async function setup_ws(usersCol) {
   const wss = new WebSocketServer({ port });
 
   wss.on("listening", () => {
@@ -135,6 +137,7 @@ export function setup_ws() {
               black,
               turn: white,
               board: makeBoard(),
+              history: [],
             }
           )
 
@@ -148,30 +151,66 @@ export function setup_ws() {
             gameId,
             white,
             black,
+            board: makeBoard()
           }));
 
           clients.get(white)?.send(start);
           clients.get(black)?.send(start);
 
           break;
-        case "MOVE":
-          handleMove(
-            games,
-            playerGames.get(ws.userId),
+        case "MOVE": {
+          const gameId = playerGames.get(ws.userId);
+          const game = games.get(gameId);
+          const white = ws.userId == game.white;
+
+          if (!game) {
+            return;
+          }
+
+          const gameover = handleMove(
+            game,
+            white,
             clients,
-            ws.userId,
-            msg
+            msg.selected,
+            msg.target,
           );
 
+          game.history.push([msg.selected, msg.target]);
+
+          if (gameover) {
+            const GMOV = JSON.stringify({
+              type: "GMOV",
+              board: game.board,
+              winner: ws.userId,
+            });
+
+            const whiteDb = await usersCol.findOne({ _id: ObjectId(game.white) });
+            const blackDb = await usersCol.findOne({ _id: ObjectId(game.black) });
+
+            clients.get(game.white)?.send(GMOV);
+            clients.get(game.black)?.send(GMOV);
+
+            playerGames.delete(game.white);
+            playerGames.delete(game.black);
+            games.delete(gameId);
+          } else {
+           const MOVE = JSON.stringify({
+              type: "MOVE",
+              board: game.board,
+            });
+
+            clients.get(game.white)?.send(MOVE);
+            clients.get(game.black)?.send(MOVE);
+          }
+
           break;
+        }
       }
     });
 
     ws.on("close", () => {
       clients.delete(ws.userId);
       challenges.delete(ws.userId);
-
-      console.log("RESIGN IS NOT HANDLED YET");
     });
   });
 }

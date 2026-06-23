@@ -1,6 +1,7 @@
 //import { jwtDecode } from "jwt-decode";
 
-import { makeInitialBoard } from "../game/board";
+import { updateBoard } from "../game/board";
+import { render } from "../main";
 import { gamePage } from "../pages/game";
 import type { GlobalState } from "../types/states";
 
@@ -20,7 +21,7 @@ export function sck_auth(siteState: GlobalState) {
 }
 
 // handle proposed and accepted challenges on message event
-export function sck_challenge_monitor(siteState: GlobalState) {
+export function sck_msg_monitor(siteState: GlobalState) {
   return async (ev: MessageEvent) => {
     const data = JSON.parse(ev.data);
 
@@ -42,14 +43,38 @@ export function sck_challenge_monitor(siteState: GlobalState) {
         break;
       case "STRT":
         const white = data.white == siteState.myId;
-        const boardMap = makeInitialBoard();
+        const boardMap = data.board;
 
-        siteState.game = { id: data.gameId, whiteId: data.white, blackId: data.black, white, boardMap };
+        siteState.game = { id: data.gameId, whiteId: data.white, blackId: data.black, white, turn: true, boardMap, selected: undefined, target: undefined };
 
         console.log("O jogo começou.");
 
         gamePage(siteState);
 
+        break;
+      case "MOVE":
+        siteState.game!.boardMap = data.board;
+        siteState.game!.turn = !siteState.game!.turn;
+        siteState.game!.selected = siteState.game!.target = undefined;
+        updateBoard(siteState);
+        break;
+      case "GMOV":
+        const g = siteState.game!;
+        let win;
+
+        if (g.turn && g.white || !g.turn && !g.white) {
+          win = "VOCÊ";
+        } else {
+          win = "O OPONENTE";
+        }
+
+        alert(`FIM DE JOGO! ${win} venceu.`);
+        
+        render();
+        break;
+      case "ACDW":
+        alert("O jogo termina em empate.");
+        render();
         break;
     }
   }
@@ -70,7 +95,7 @@ export function sck_connect(siteState: GlobalState): WebSocket {
 
   socket.addEventListener("open", sck_auth(siteState));
   socket.addEventListener("message", sck_logger);
-  socket.addEventListener("message", sck_challenge_monitor(siteState));
+  socket.addEventListener("message", sck_msg_monitor(siteState));
 
   return socket;
 }

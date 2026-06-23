@@ -37,12 +37,13 @@ export async function setup_db() {
   const db = client.db("damsel");
 
   const usersCol = db.collection("users");
+  const gamesCol = db.collection("games");
 
   await usersCol.createIndex(
     { login: 1 },
     { unique: true }
   );
-
+  
   return usersCol;
 }
 

@@ -1,9 +1,6 @@
 import './style.css';
 import { GlobalState } from './types/states.ts';
-import { configDotenv } from 'dotenv';
 import { pageRender } from './pages/page_renderer.ts';
-
-configDotenv();
 
 let siteState: GlobalState = new GlobalState();
 
