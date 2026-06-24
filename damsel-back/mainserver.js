@@ -21,6 +21,31 @@ app.use(express.json());
 
 app.use(cors());
 
+app.get("/history", async (req, res) => {
+  const userId = req.query.id;
+  const idx = req.query.idx;
+
+  if (!userId) {
+    return res.status(400).send({
+      message: "Request inválido",
+    });
+  }
+  const user = await usersCol.findOne({ _id: new ObjectId(userId) });
+
+  if (!user) {
+    return res.status(404).send({
+      message: "Usuário não encontrado.",
+    });
+  }
+
+  if (idx) {
+    return res.status(200).send(user.history[idx]);
+  } else {
+    console.log(user);
+    return res.status(200).send(user.history);
+  }
+});
+
 app.get("/user", async (req, res) => {
   const login = req.query.login;
   const id = req.query.id;
@@ -136,8 +161,8 @@ app.listen(port, () => {
   console.log(`Open: ${port}`);
 });
 
-// websocket
-setup_ws();
-
 // dbconn
 const usersCol = await setup_db();
+
+// websocket
+setup_ws(usersCol);

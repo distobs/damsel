@@ -3,7 +3,7 @@ import type { GlobalState } from "../types/states";
 /* DRAWING */
 let canvas: HTMLCanvasElement;
 
-const pieces = Object.freeze({
+export const pieces = Object.freeze({
   NONE: 0,
   WHITE: 1,
   BLACK: 2,

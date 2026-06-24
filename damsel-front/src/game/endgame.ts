@@ -2,7 +2,9 @@ import { render } from "../main";
 import type { GlobalState } from "../types/states";
 
 export function resign(siteState: GlobalState) {
-  return async () => {
+  return async (ev: PointerEvent) => {
+    ev.preventDefault();
+
     const conf = confirm("Quer mesmo desistir do jogo?");
 
     if (conf) {
@@ -14,16 +16,9 @@ export function resign(siteState: GlobalState) {
 }
 
 export function draw(siteState: GlobalState) {
-  return async () => {
-    siteState.socket!.send(JSON.stringify({ type: "DRAW" }));
+  return async (ev: PointerEvent) => {
+    ev.preventDefault();
 
-    siteState.socket!.addEventListener("message", (msg: MessageEvent) => {
-      if (msg.data.type == "ACDW") {
-        alert("O jogo termina em empate.");
-        render();
-      } else if (msg.data.type == "RFDW") {
-        alert("Empate negado");
-      }
-    })
+    siteState.socket!.send(JSON.stringify({ type: "DRAW" }));
   }
 }

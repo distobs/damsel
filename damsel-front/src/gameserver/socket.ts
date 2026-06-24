@@ -27,11 +27,11 @@ export function sck_msg_monitor(siteState: GlobalState) {
 
     switch (data.type) {
       case "DRAW": {
-        console.log(" eu existor");
         const conf = confirm("O oponente deseja empatar. Deseja aceitar a oferta de empate?");
 
         if (conf) {
           siteState.socket!.send(JSON.stringify({ type: "ACDW" }));
+          render();
         } else {
           siteState.socket!.send(JSON.stringify({ type: "RFDW" }));
         }
@@ -87,6 +87,15 @@ export function sck_msg_monitor(siteState: GlobalState) {
       case "ACDW":
         alert("O jogo termina em empate.");
         render();
+        break;
+      case "RFDW":
+        alert("Empate negado.");
+        break;
+      case "RSGN":
+        alert("O oponente desistiu da partida.");
+        render();
+        break;
+      default:
         break;
     }
   }

@@ -161,6 +161,11 @@ export async function setup_ws(usersCol) {
         case "DRAW": {
           const gameId = playerGames.get(ws.userId);
           const game = games.get(gameId);
+
+          if (!game) {
+            return;
+          }
+
           const opp = (ws.userId == game.white) ? game.black : game.white;
 
           console.log("eu existo");
@@ -172,24 +177,32 @@ export async function setup_ws(usersCol) {
           const gameId = playerGames.get(ws.userId);
           const game = games.get(gameId);
 
-          usersCol.updateOne({ _id: ObjectId(game.white) },
+          if (!game) {
+            return;
+          }
+
+          const opp = (ws.userId == game.white) ? game.black : game.white;
+
+          usersCol.updateOne({ _id: new ObjectId(game.white) },
             {
               $push: {
-                history: { opponent: game.black, moves: game.history, winner: "DRAW" }
+                history: { opponent: game.black, moves: game.history, winner: "DRAW", white: game.white }
               }
             }
           );
 
-          usersCol.updateOne({ _id: ObjectId(game.black) },
+          usersCol.updateOne({ _id: new ObjectId(game.black) },
             {
               $push: {
-                history: { opponent: game.white, moves: game.history, winner: "DRAW" }
+                history: { opponent: game.white, moves: game.history, winner: "DRAW", white: game.white }
               }
             }
           );
 
-          playerGames.delete(games.white);
-          playerGames.delete(games.black);
+          clients.get(opp).send(JSON.stringify({ type: "ACDW" }));
+
+          playerGames.delete(game.white);
+          playerGames.delete(game.black);
           games.delete(gameId);
 
           break;
@@ -197,6 +210,11 @@ export async function setup_ws(usersCol) {
         case "RFDW": {
           const gameId = playerGames.get(ws.userId);
           const game = games.get(gameId);
+
+          if (!game) {
+            return;
+          }
+
           const opp = (ws.userId == game.white) ? game.black : game.white;
 
           clients.get(opp).send(JSON.stringify({ type: "RFDW" }));
@@ -205,10 +223,16 @@ export async function setup_ws(usersCol) {
         }
         case "RSGN": {
           const gameId = playerGames.get(ws.userId);
+
           const game = games.get(gameId);
+
+          if (!game) {
+            return;
+          }
+
           const opp = (ws.userId == game.white) ? game.black : game.white;
 
-          usersCol.updateOne({ _id: ObjectId(game.white) },
+          usersCol.updateOne({ _id: new ObjectId(game.white) },
             {
               $push: {
                 history: { opponent: game.black, moves: game.history, winner: opp }
@@ -216,7 +240,7 @@ export async function setup_ws(usersCol) {
             }
           );
 
-          usersCol.updateOne({ _id: ObjectId(game.black) },
+          usersCol.updateOne({ _id: new ObjectId(game.black) },
             {
               $push: {
                 history: { opponent: game.white, moves: game.history, winner: opp }
@@ -224,20 +248,23 @@ export async function setup_ws(usersCol) {
             }
           );
 
-          playerGames.delete(games.white);
-          playerGames.delete(games.black);
+          clients.get(opp).send(JSON.stringify({ type: "RSGN" }));
+
+          playerGames.delete(game.white);
+          playerGames.delete(game.black);
           games.delete(gameId);
 
           break;
         }
         case "MOVE": {
           const gameId = playerGames.get(ws.userId);
-          const game = games.get(gameId);
-          const white = ws.userId == game.white;
 
-          if (!game) {
+          if (!gameId) {
             return;
           }
+
+          const game = games.get(gameId);
+          const white = ws.userId == game.white;
 
           const gameover = handleMove(
             game,
@@ -256,7 +283,7 @@ export async function setup_ws(usersCol) {
               winner: ws.userId,
             });
 
-            usersCol.updateOne({ _id: ObjectId(game.white) },
+            usersCol.updateOne({ _id: new ObjectId(game.white) },
               {
                 $push: {
                   history: { opponent: game.black, moves: game.history, winner: ws.userId }
@@ -264,7 +291,7 @@ export async function setup_ws(usersCol) {
               }
             );
 
-            usersCol.updateOne({ _id: ObjectId(game.black) },
+            usersCol.updateOne({ _id: new ObjectId(game.black) },
               {
                 $push: {
                   history: { opponent: game.white, moves: game.history, winner: ws.userId }
@@ -296,6 +323,33 @@ export async function setup_ws(usersCol) {
     ws.on("close", () => {
       clients.delete(ws.userId);
       challenges.delete(ws.userId);
+
+      const gameId = playerGames.get(ws.userId);
+
+      if (!gameId) {
+        return;
+      }
+
+      const game = games.get(gameId);
+
+      if (!game) {
+        return;
+      }
+
+      const opp =
+        ws.userId === game.white
+          ? game.black
+          : game.white;
+
+      clients.get(opp)?.send(
+        JSON.stringify({
+          type: "RSGN"
+        })
+      );
+
+      playerGames.delete(game.white);
+      playerGames.delete(game.black);
+      games.delete(gameId);
     });
   });
 }
