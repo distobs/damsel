@@ -16,7 +16,7 @@ export function sck_logger(ev: MessageEvent<any>) {
 // authorize on open event
 export function sck_auth(siteState: GlobalState) {
   return async () => {
-    await siteState.socket!.send(JSON.stringify({ type: "AUTH", token: siteState.jwt }));
+    siteState.socket!.send(JSON.stringify({ type: "AUTH", token: siteState.jwt }));
   }
 }
 
@@ -26,19 +26,29 @@ export function sck_msg_monitor(siteState: GlobalState) {
     const data = JSON.parse(ev.data);
 
     switch (data.type) {
+      case "DRAW": {
+        console.log(" eu existor");
+        const conf = confirm("O oponente deseja empatar. Deseja aceitar a oferta de empate?");
+
+        if (conf) {
+          siteState.socket!.send(JSON.stringify({ type: "ACDW" }));
+        } else {
+          siteState.socket!.send(JSON.stringify({ type: "RFDW" }));
+        }
+
+        break;
+      }
       case "CHAL":
         const from = data.from;
         const res = await fetch(`http://localhost:3000/user?id=${from}`);
         const jres = await res.json();
         const login = jres.login;
 
-        window.focus();
         const conf = confirm(`Você aceita o desafio de ${login}?`);
-        window.focus();
 
         if (conf) {
           console.log("Desafio aceito!");
-          await siteState.socket!.send(JSON.stringify({ type: "ACPT" }));
+          siteState.socket!.send(JSON.stringify({ type: "ACPT" }));
           console.log("Esperando retorno de começo de jogo.");
         }
 
@@ -71,7 +81,7 @@ export function sck_msg_monitor(siteState: GlobalState) {
         }
 
         alert(`FIM DE JOGO! ${win} venceu.`);
-        
+
         render();
         break;
       case "ACDW":

@@ -1,4 +1,5 @@
 import { setupBoard } from "../game/board";
+import { resign, draw } from "../game/endgame";
 import type { GlobalState } from "../types/states";
 
 export function gamePage(siteState: GlobalState) {
@@ -15,6 +16,10 @@ export function gamePage(siteState: GlobalState) {
 
   const board = document.querySelector<HTMLCanvasElement>("#board")!;
   const resignButton = document.querySelector<HTMLAnchorElement>("#resign");
-    const drawButton = document.querySelector<HTMLAnchorElement>("#resign");
+  const drawButton = document.querySelector<HTMLAnchorElement>("#offerDraw");
+
+  resignButton?.addEventListener("click", resign(siteState));
+  drawButton?.addEventListener("click", draw(siteState));
+
   setupBoard(siteState, board);
 };

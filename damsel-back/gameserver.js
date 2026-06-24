@@ -158,6 +158,78 @@ export async function setup_ws(usersCol) {
           clients.get(black)?.send(start);
 
           break;
+        case "DRAW": {
+          const gameId = playerGames.get(ws.userId);
+          const game = games.get(gameId);
+          const opp = (ws.userId == game.white) ? game.black : game.white;
+
+          console.log("eu existo");
+          clients.get(opp).send(JSON.stringify({ type: "DRAW" }));
+
+          break;
+        }
+        case "ACDW": {
+          const gameId = playerGames.get(ws.userId);
+          const game = games.get(gameId);
+
+          usersCol.updateOne({ _id: ObjectId(game.white) },
+            {
+              $push: {
+                history: { opponent: game.black, moves: game.history, winner: "DRAW" }
+              }
+            }
+          );
+
+          usersCol.updateOne({ _id: ObjectId(game.black) },
+            {
+              $push: {
+                history: { opponent: game.white, moves: game.history, winner: "DRAW" }
+              }
+            }
+          );
+
+          playerGames.delete(games.white);
+          playerGames.delete(games.black);
+          games.delete(gameId);
+
+          break;
+        }
+        case "RFDW": {
+          const gameId = playerGames.get(ws.userId);
+          const game = games.get(gameId);
+          const opp = (ws.userId == game.white) ? game.black : game.white;
+
+          clients.get(opp).send(JSON.stringify({ type: "RFDW" }));
+
+          break;
+        }
+        case "RSGN": {
+          const gameId = playerGames.get(ws.userId);
+          const game = games.get(gameId);
+          const opp = (ws.userId == game.white) ? game.black : game.white;
+
+          usersCol.updateOne({ _id: ObjectId(game.white) },
+            {
+              $push: {
+                history: { opponent: game.black, moves: game.history, winner: opp }
+              }
+            }
+          );
+
+          usersCol.updateOne({ _id: ObjectId(game.black) },
+            {
+              $push: {
+                history: { opponent: game.white, moves: game.history, winner: opp }
+              }
+            }
+          );
+
+          playerGames.delete(games.white);
+          playerGames.delete(games.black);
+          games.delete(gameId);
+
+          break;
+        }
         case "MOVE": {
           const gameId = playerGames.get(ws.userId);
           const game = games.get(gameId);
@@ -185,18 +257,20 @@ export async function setup_ws(usersCol) {
             });
 
             usersCol.updateOne({ _id: ObjectId(game.white) },
-            {
-              $push: {
-                history: { opponent: game.black, moves: game.history }
+              {
+                $push: {
+                  history: { opponent: game.black, moves: game.history, winner: ws.userId }
+                }
               }
-            });
+            );
 
             usersCol.updateOne({ _id: ObjectId(game.black) },
-            {
-              $push: {
-                history: { opponent: game.white, moves: game.history }
+              {
+                $push: {
+                  history: { opponent: game.white, moves: game.history, winner: ws.userId }
+                }
               }
-            });
+            );
 
             clients.get(game.white)?.send(GMOV);
             clients.get(game.black)?.send(GMOV);
@@ -205,7 +279,7 @@ export async function setup_ws(usersCol) {
             playerGames.delete(game.black);
             games.delete(gameId);
           } else {
-           const MOVE = JSON.stringify({
+            const MOVE = JSON.stringify({
               type: "MOVE",
               board: game.board,
             });
