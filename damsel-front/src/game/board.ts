@@ -11,6 +11,30 @@ export const pieces = Object.freeze({
   BLACKQN: 4
 });
 
+export function makeBoard() {
+  let board: number[][] = []
+
+  for (let i = 0; i < 8; ++i) {
+    board.push([]);
+
+    for (let j = 0; j < 8; ++j) {
+      const playable = (i + j) % 2 === 1;
+
+      if (!playable) {
+        board[i].push(pieces.NONE);
+      } else if (i < 3) {
+        board[i].push(pieces.BLACK);
+      } else if (i > 4) {
+        board[i].push(pieces.WHITE);
+      } else {
+        board[i].push(pieces.NONE);
+      }
+    }
+  }
+
+  return board;
+}
+
 function getSqCenter(canvas: HTMLCanvasElement, pos: {x: number, y: number}) {
   let sqside = canvas.width / 8;
   let sqx = pos.x * sqside;
@@ -51,7 +75,7 @@ function drawSelectedSquare(ctx: CanvasRenderingContext2D, sqCenter: {x: number,
   ctx.stroke();
 }
 
-function drawSquares(ctx: CanvasRenderingContext2D) {
+function drawSquares(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
   let side = canvas.width;
   let sqSide = side / 8;
   let colors = ["#eedc97", "#241a0f"];
@@ -79,7 +103,7 @@ function drawMap(boardMap: number[][], canvas: HTMLCanvasElement) {
   }
 }
 
-function drawBoard(white: boolean, boardMap: number[][], canvas: HTMLCanvasElement, selected?: {sx: number, sy: number}) {
+export function drawBoard(white: boolean, boardMap: number[][], canvas: HTMLCanvasElement, selected?: {sx: number, sy: number}) {
   let ctx = canvas.getContext("2d")!;
 
   canvas.width = 500;
@@ -94,7 +118,7 @@ function drawBoard(white: boolean, boardMap: number[][], canvas: HTMLCanvasEleme
     ctx.translate(-canvas.width, -canvas.height);
   }
 
-  drawSquares(ctx);
+  drawSquares(canvas, ctx);
   drawMap(boardMap, canvas);
   
   if (selected) {

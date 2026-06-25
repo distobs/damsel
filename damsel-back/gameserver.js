@@ -138,6 +138,7 @@ export async function setup_ws(usersCol) {
               turn: white,
               board: makeBoard(),
               history: [],
+              startDate: new Date(),
             }
           )
 
@@ -168,7 +169,6 @@ export async function setup_ws(usersCol) {
 
           const opp = (ws.userId == game.white) ? game.black : game.white;
 
-          console.log("eu existo");
           clients.get(opp).send(JSON.stringify({ type: "DRAW" }));
 
           break;
@@ -186,7 +186,7 @@ export async function setup_ws(usersCol) {
           usersCol.updateOne({ _id: new ObjectId(game.white) },
             {
               $push: {
-                history: { opponent: game.black, moves: game.history, winner: "DRAW", white: game.white }
+                history: { opponent: game.black, moves: game.history, winner: "DRAW", white: game.white, startDate: game.startDate }
               }
             }
           );
@@ -194,7 +194,7 @@ export async function setup_ws(usersCol) {
           usersCol.updateOne({ _id: new ObjectId(game.black) },
             {
               $push: {
-                history: { opponent: game.white, moves: game.history, winner: "DRAW", white: game.white }
+                history: { opponent: game.white, moves: game.history, winner: "DRAW", white: game.white, startDate: game.startDate }
               }
             }
           );
@@ -235,7 +235,7 @@ export async function setup_ws(usersCol) {
           usersCol.updateOne({ _id: new ObjectId(game.white) },
             {
               $push: {
-                history: { opponent: game.black, moves: game.history, winner: opp }
+                history: { opponent: game.black, moves: game.history, winner: opp, startDate: game.startDate }
               }
             }
           );
@@ -243,7 +243,7 @@ export async function setup_ws(usersCol) {
           usersCol.updateOne({ _id: new ObjectId(game.black) },
             {
               $push: {
-                history: { opponent: game.white, moves: game.history, winner: opp }
+                history: { opponent: game.white, moves: game.history, winner: opp, startDate: game.startDate }
               }
             }
           );
@@ -286,7 +286,7 @@ export async function setup_ws(usersCol) {
             usersCol.updateOne({ _id: new ObjectId(game.white) },
               {
                 $push: {
-                  history: { opponent: game.black, moves: game.history, winner: ws.userId }
+                  history: { opponent: game.black, moves: game.history, winner: ws.userId, startDate: game.startDate }
                 }
               }
             );
@@ -294,7 +294,7 @@ export async function setup_ws(usersCol) {
             usersCol.updateOne({ _id: new ObjectId(game.black) },
               {
                 $push: {
-                  history: { opponent: game.white, moves: game.history, winner: ws.userId }
+                  history: { opponent: game.white, moves: game.history, winner: ws.userId, startDate: game.startDate }
                 }
               }
             );

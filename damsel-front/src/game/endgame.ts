@@ -2,7 +2,7 @@ import { render } from "../main";
 import type { GlobalState } from "../types/states";
 
 export function resign(siteState: GlobalState) {
-  return async (ev: PointerEvent) => {
+  return async (ev: MouseEvent) => {
     ev.preventDefault();
 
     const conf = confirm("Quer mesmo desistir do jogo?");
@@ -16,7 +16,7 @@ export function resign(siteState: GlobalState) {
 }
 
 export function draw(siteState: GlobalState) {
-  return async (ev: PointerEvent) => {
+  return async (ev: MouseEvent) => {
     ev.preventDefault();
 
     siteState.socket!.send(JSON.stringify({ type: "DRAW" }));
